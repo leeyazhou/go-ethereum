@@ -96,7 +96,7 @@ func NewFilter(chain *core.BlockChain) Filter {
 }
 
 // NewStaticFilter creates a filter at block zero.
-func NewStaticFilter(config *params.ChainConfig, genesis common.Hash) func(id ID) error {
+func NewStaticFilter(config *params.ChainConfig, genesis common.Hash) Filter {
 	head := func() uint64 { return 0 }
 	return newFilter(config, genesis, head)
 }
@@ -104,7 +104,7 @@ func NewStaticFilter(config *params.ChainConfig, genesis common.Hash) func(id ID
 // newFilter is the internal version of NewFilter, taking closures as its arguments
 // instead of a chain. The reason is to allow testing it without having to simulate
 // an entire blockchain.
-func newFilter(config *params.ChainConfig, genesis common.Hash, headfn func() uint64) func(id ID) error {
+func newFilter(config *params.ChainConfig, genesis common.Hash, headfn func() uint64) Filter {
 	// Calculate the all the valid fork hash and fork next combos
 	var (
 		forks = gatherForks(config)
@@ -184,13 +184,6 @@ func newFilter(config *params.ChainConfig, genesis common.Hash, headfn func() ui
 		log.Error("Impossible fork ID validation", "id", id)
 		return nil // Something's very wrong, accept rather than reject
 	}
-}
-
-// checksum calculates the IEEE CRC32 checksum of a block number.
-func checksum(fork uint64) uint32 {
-	var blob [8]byte
-	binary.BigEndian.PutUint64(blob[:], fork)
-	return crc32.ChecksumIEEE(blob[:])
 }
 
 // checksumUpdate calculates the next IEEE CRC32 checksum based on the previous
